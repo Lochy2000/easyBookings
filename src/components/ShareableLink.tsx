@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, Copy, Share2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface ShareableLinkProps {

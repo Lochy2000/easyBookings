@@ -6,7 +6,7 @@ import { format, parseISO } from 'date-fns';
 import { CheckCircle, ChevronLeft, Calendar, Clock, User, Mail, Phone, MessageSquare, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import Header from '@/components/Header';
 import ShareableLink from '@/components/ShareableLink';
 

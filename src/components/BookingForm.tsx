@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { TimeSlotType } from '@/components/TimeSlot';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface BookingFormProps {

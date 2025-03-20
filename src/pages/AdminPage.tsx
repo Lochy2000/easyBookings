@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format, parseISO, addDays } from 'date-fns';
@@ -10,9 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import ShareableLink from '@/components/ShareableLink';
 import Header from '@/components/Header';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
-// Mock booking data
 const generateMockBookings = () => {
   const today = new Date();
   const bookings = [];
@@ -34,7 +32,6 @@ const generateMockBookings = () => {
     });
   }
   
-  // Sort by date
   return bookings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
@@ -42,7 +39,6 @@ const AdminPage = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   
   useEffect(() => {
-    // Load mock bookings
     setBookings(generateMockBookings());
   }, []);
   
