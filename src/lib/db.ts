@@ -85,28 +85,36 @@ export async function cancelBooking(id: string): Promise<boolean> {
 
 // For admin to add available time slots
 export async function generateTimeSlots(date: string, startHour: number = 9, endHour: number = 17, intervalMinutes: number = 30): Promise<boolean> {
-  const slots = [];
-  
-  for (let hour = startHour; hour < endHour; hour++) {
-    for (let minute = 0; minute < 60; minute += intervalMinutes) {
-      const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      
-      slots.push({
-        date,
-        time: timeStr,
-        available: true
-      });
+  try {
+    console.log(`Generating time slots for date: ${date}`);
+    const slots = [];
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += intervalMinutes) {
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        
+        slots.push({
+          date,
+          time: timeStr,
+          available: true
+        });
+      }
     }
-  }
-  
-  const { error } = await supabase
-    .from('time_slots')
-    .upsert(slots, { onConflict: 'date,time' });
-  
-  if (error) {
-    console.error('Error generating time slots:', error);
+    
+    console.log(`Generated ${slots.length} slots for ${date}`);
+    
+    const { error } = await supabase
+      .from('time_slots')
+      .upsert(slots, { onConflict: 'date,time' });
+    
+    if (error) {
+      console.error('Error generating time slots:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception in generateTimeSlots:', error);
     return false;
   }
-  
-  return true;
 }

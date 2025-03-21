@@ -47,9 +47,14 @@ const Calendar = ({
     return (
       isBefore(date, minDate) ||
       isAfter(date, maxDate) ||
-      disabledDates.some(disabledDate => isSameDay(date, disabledDate))
+      disabledDates.some(disabledDate => disabledDate && isSameDay(date, disabledDate))
     );
   };
+
+  // Ensure the calendar has valid dates before rendering
+  if (calendarDays.length === 0) {
+    return <div className="loading">Loading calendar...</div>;
+  }
 
   return (
     <div className={cn("w-full rounded-2xl shadow-sm overflow-hidden bg-card", className)}>
@@ -59,14 +64,14 @@ const Calendar = ({
           size="icon"
           className="rounded-full h-8 w-8"
           onClick={() => changeWeek('prev')}
-          disabled={isBefore(calendarDays[0], minDate)}
+          disabled={calendarDays.length > 0 && isBefore(calendarDays[0], minDate)}
         >
           <ChevronLeft className="h-4 w-4" />
           <span className="sr-only">Previous week</span>
         </Button>
         
         <h3 className="text-sm font-medium">
-          {format(calendarDays[0], 'MMMM yyyy')}
+          {calendarDays.length > 0 ? format(calendarDays[0], 'MMMM yyyy') : ''}
         </h3>
         
         <Button
@@ -74,7 +79,7 @@ const Calendar = ({
           size="icon"
           className="rounded-full h-8 w-8"
           onClick={() => changeWeek('next')}
-          disabled={isAfter(calendarDays[6], maxDate)}
+          disabled={calendarDays.length > 0 && isAfter(calendarDays[6], maxDate)}
         >
           <ChevronRight className="h-4 w-4" />
           <span className="sr-only">Next week</span>
@@ -97,10 +102,10 @@ const Calendar = ({
               onClick={() => onSelectDate(day)}
               className={cn(
                 "inline-flex items-center justify-center w-8 h-8 rounded-full text-sm transition-all",
-                isSameDay(day, selectedDate || new Date(-1)) 
+                selectedDate && isSameDay(day, selectedDate)
                   ? "bg-primary text-primary-foreground" 
                   : "hover:bg-secondary",
-                isSameDay(day, new Date()) && !isSameDay(day, selectedDate || new Date(-1)) && "border border-primary/50",
+                isSameDay(day, new Date()) && selectedDate && !isSameDay(day, selectedDate) && "border border-primary/50",
                 isDateDisabled(day) && "opacity-50 cursor-not-allowed"
               )}
             >
