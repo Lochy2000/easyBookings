@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { format, parseISO, addDays } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, User, Users, Settings, Mail, Calendar, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,50 +10,92 @@ import { Input } from '@/components/ui/input';
 import ShareableLink from '@/components/ShareableLink';
 import Header from '@/components/Header';
 import { toast } from 'sonner';
-
-const generateMockBookings = () => {
-  const today = new Date();
-  const bookings = [];
-  
-  for (let i = 0; i < 10; i++) {
-    const date = addDays(today, Math.floor(Math.random() * 30));
-    const hour = 9 + Math.floor(Math.random() * 8);
-    const minute = Math.random() > 0.5 ? 30 : 0;
-    
-    date.setHours(hour, minute);
-    
-    bookings.push({
-      id: `booking-${i}`,
-      date: date.toISOString(),
-      clientName: ['John Doe', 'Jane Smith', 'Alex Johnson', 'Sam Wilson', 'Emma Thompson'][Math.floor(Math.random() * 5)],
-      clientEmail: 'client@example.com',
-      clientPhone: '+1 (555) 123-4567',
-      notes: Math.random() > 0.7 ? 'Some additional notes for this appointment.' : ''
-    });
-  }
-  
-  return bookings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-};
+import { getBookings, cancelBooking, generateTimeSlots } from '@/lib/db';
+import { Booking } from '@/lib/supabase';
 
 const AdminPage = () => {
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   useEffect(() => {
-    setBookings(generateMockBookings());
+    fetchBookings();
   }, []);
   
-  const upcomingBookings = bookings.filter(
-    booking => new Date(booking.date) >= new Date()
-  );
-  
-  const pastBookings = bookings.filter(
-    booking => new Date(booking.date) < new Date()
-  );
-  
-  const cancelBooking = (id: string) => {
-    setBookings(prev => prev.filter(booking => booking.id !== id));
-    toast.success('Booking has been cancelled');
+  const fetchBookings = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedBookings = await getBookings();
+      setBookings(fetchedBookings);
+    } catch (error) {
+      console.error('Failed to fetch bookings:', error);
+      toast.error('Failed to load bookings. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+  
+  const handleCancelBooking = async (id: string) => {
+    try {
+      const success = await cancelBooking(id);
+      if (success) {
+        setBookings(prev => prev.map(booking => 
+          booking.id === id ? { ...booking, status: 'cancelled' as const } : booking
+        ));
+        toast.success('Booking has been cancelled');
+      } else {
+        toast.error('Failed to cancel booking. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      toast.error('Failed to cancel booking. Please try again.');
+    }
+  };
+  
+  const handleGenerateTimeSlots = async () => {
+    try {
+      const today = new Date();
+      let successCount = 0;
+      
+      for (let i = 0; i < 30; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() + i);
+        const dateString = format(date, 'yyyy-MM-dd');
+        
+        const success = await generateTimeSlots(dateString);
+        if (success) successCount++;
+      }
+      
+      if (successCount > 0) {
+        toast.success(`Generated time slots for ${successCount} days`);
+      } else {
+        toast.error('Failed to generate time slots. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error generating time slots:', error);
+      toast.error('Failed to generate time slots. Please try again.');
+    }
+  };
+  
+  const filteredBookings = searchTerm 
+    ? bookings.filter(booking => 
+        booking.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.client_email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : bookings;
+  
+  const upcomingBookings = filteredBookings.filter(
+    booking => 
+      new Date(booking.date) >= new Date() && 
+      booking.status === 'confirmed'
+  );
+  
+  const pastBookings = filteredBookings.filter(
+    booking => 
+      new Date(booking.date) < new Date() || 
+      booking.status === 'cancelled' ||
+      booking.status === 'completed'
+  );
   
   return (
     <>
@@ -105,7 +147,7 @@ const AdminPage = () => {
                           <BookingCard 
                             key={booking.id} 
                             booking={booking} 
-                            onCancel={() => cancelBooking(booking.id)} 
+                            onCancel={() => handleCancelBooking(booking.id)} 
                           />
                         ))}
                       </div>
@@ -202,6 +244,21 @@ const AdminPage = () => {
                         </Button>
                       </CardContent>
                     </Card>
+                    
+                    <Card className="mt-6">
+                      <CardHeader>
+                        <CardTitle>Generate Time Slots</CardTitle>
+                        <CardDescription>
+                          Generate time slots for the next 30 days
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button onClick={handleGenerateTimeSlots}>
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Generate Time Slots
+                        </Button>
+                      </CardContent>
+                    </Card>
                   </motion.div>
                 </TabsContent>
               </Tabs>
@@ -245,7 +302,7 @@ const AdminPage = () => {
                       <div>
                         <div className="text-sm text-muted-foreground">Total Clients</div>
                         <div className="font-medium text-lg">
-                          {new Set(bookings.map(b => b.clientName)).size}
+                          {new Set(bookings.map(b => b.client_name)).size}
                         </div>
                       </div>
                     </div>
@@ -300,12 +357,12 @@ const BookingCard = ({ booking, isPast = false, onCancel }: BookingCardProps) =>
             <div>
               <h3 className="font-medium text-lg flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                {booking.clientName}
+                {booking.client_name}
               </h3>
               
               <div className="flex items-center text-sm text-muted-foreground mt-1">
                 <Mail className="h-3 w-3 mr-1" />
-                {booking.clientEmail}
+                {booking.client_email}
               </div>
             </div>
             

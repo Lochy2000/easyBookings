@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
@@ -10,55 +9,42 @@ import Calendar from '@/components/Calendar';
 import TimeSlot, { TimeSlotType } from '@/components/TimeSlot';
 import BookingForm, { BookingFormData } from '@/components/BookingForm';
 import Header from '@/components/Header';
-
-// Mock time slots data - in a real app, this would come from an API
-const generateTimeSlots = (date: Date): TimeSlotType[] => {
-  const slots = [];
-  const today = new Date();
-  const isToday = date.getDate() === today.getDate() && 
-                 date.getMonth() === today.getMonth() && 
-                 date.getFullYear() === today.getFullYear();
-  
-  // Generate slots from 9 AM to 5 PM
-  for (let hour = 9; hour < 17; hour++) {
-    // For 30-minute intervals
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      
-      // If it's today, only show future time slots
-      if (isToday) {
-        const currentHour = today.getHours();
-        const currentMinute = today.getMinutes();
-        
-        if (hour < currentHour || (hour === currentHour && minute <= currentMinute)) {
-          continue;
-        }
-      }
-      
-      // Randomly mark some slots as unavailable
-      const randomAvailability = Math.random() > 0.3;
-      
-      slots.push({
-        id: `${date.toISOString().split('T')[0]}-${timeStr}`,
-        time: timeStr,
-        available: randomAvailability
-      });
-    }
-  }
-  
-  return slots;
-};
+import { getTimeSlots, createBooking } from '@/lib/db';
 
 const BookingPage = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlotType | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlotType[]>([]);
-  const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
+    const fetchTimeSlots = async (date: Date) => {
+      setIsLoading(true);
+      try {
+        // Format date as YYYY-MM-DD for Supabase
+        const dateString = format(date, 'yyyy-MM-dd');
+        const slots = await getTimeSlots(dateString);
+        
+        // Map the database format to the TimeSlotType format
+        const mappedSlots: TimeSlotType[] = slots.map(slot => ({
+          id: slot.id,
+          time: slot.time,
+          available: slot.available
+        }));
+        
+        setTimeSlots(mappedSlots);
+      } catch (error) {
+        console.error('Failed to fetch time slots:', error);
+        toast.error('Failed to load available time slots. Please try again.');
+        setTimeSlots([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
     if (selectedDate) {
-      setTimeSlots(generateTimeSlots(selectedDate));
+      fetchTimeSlots(selectedDate);
       setSelectedTimeSlot(null); // Reset selected time when date changes
     }
   }, [selectedDate]);
@@ -71,23 +57,43 @@ const BookingPage = () => {
     setSelectedTimeSlot(slot);
   };
   
-  const handleBookingSubmit = (data: BookingFormData) => {
-    console.log('Booking submitted:', {
-      date: selectedDate,
-      timeSlot: selectedTimeSlot,
-      user: data
-    });
+  const handleBookingSubmit = async (data: BookingFormData) => {
+    if (!selectedDate || !selectedTimeSlot) {
+      toast.error('Please select a date and time slot');
+      return;
+    }
     
-    // Navigate to confirmation page with booking details
-    navigate('/confirmation', { 
-      state: {
-        booking: {
-          date: selectedDate,
-          timeSlot: selectedTimeSlot,
-          user: data
-        }
-      } 
-    });
+    try {
+      // Format date as YYYY-MM-DD for Supabase
+      const dateString = format(selectedDate, 'yyyy-MM-dd');
+      
+      const booking = await createBooking({
+        date: dateString,
+        time: selectedTimeSlot.time,
+        client_name: data.name,
+        client_email: data.email,
+        client_phone: data.phone,
+        notes: data.notes
+      });
+      
+      if (booking) {
+        // Navigate to confirmation page with booking details
+        navigate('/confirmation', { 
+          state: {
+            booking: {
+              date: selectedDate,
+              timeSlot: selectedTimeSlot,
+              user: data
+            }
+          } 
+        });
+      } else {
+        toast.error('Failed to create booking. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      toast.error('Failed to create booking. Please try again.');
+    }
   };
   
   return (
