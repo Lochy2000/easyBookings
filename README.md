@@ -1,69 +1,110 @@
-# Welcome to your Lovable project
 
-## Project info
+# Appointment Booking Application
 
-**URL**: https://lovable.dev/projects/da1d465b-eb75-4f43-9f08-f35cb4caf897
+A modern, responsive web application for scheduling and managing appointments. Perfect for professionals, service providers, and small businesses who need an easy way to let clients book time slots.
 
-## How can I edit this code?
+![Appointment Booking App](public/og-image.png)
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **Intuitive Booking System**: Calendar and time slot selection with a simple, user-friendly interface
+- **Mobile-Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+- **Shareable Booking Links**: Generate and share direct booking links with clients
+- **Admin Dashboard**: View and manage upcoming appointments
+- **Smart Time Slot Management**: Prevents double-bookings and shows availability in real-time
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/da1d465b-eb75-4f43-9f08-f35cb4caf897) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js (v16 or higher)
+- npm, yarn, or pnpm
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/appointment-booking-app.git
+   cd appointment-booking-app
+   ```
 
-Follow these steps:
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. Open your browser and navigate to `http://localhost:8080`
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Setting Up Production
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+To deploy this application to production:
 
-**Edit a file directly in GitHub**
+1. Build the application:
+   ```bash
+   npm run build
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+2. The built files will be in the `dist` directory, which you can deploy to any static hosting service (Netlify, Vercel, GitHub Pages, etc.)
 
-**Use GitHub Codespaces**
+## Connecting to a Backend
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Currently, the application uses mock data. To connect to a real backend:
 
-## What technologies are used for this project?
+### Option 1: Use a Backend Service
 
-This project is built with .
+1. Create an account with a service like Supabase, Firebase, or AWS Amplify
+2. Follow their documentation to set up authentication and a database
+3. Update the API calls in the application to use your backend endpoints
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Option 2: Create Your Own API
 
-## How can I deploy this project?
+1. Create API endpoints for:
+   - Fetching available time slots
+   - Creating new bookings
+   - Managing bookings (admin functionality)
 
-Simply open [Lovable](https://lovable.dev/projects/da1d465b-eb75-4f43-9f08-f35cb4caf897) and click on Share -> Publish.
+2. Update the following files with your API endpoints:
+   - `src/pages/BookingPage.tsx` - For fetching and selecting time slots
+   - `src/pages/AdminPage.tsx` - For managing bookings
+   - `src/components/BookingForm.tsx` - For submitting booking details
 
-## I want to use a custom domain - is that possible?
+## Customization
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+### Business Details
+
+Update your business details in `src/pages/Index.tsx`
+
+### Available Time Slots
+
+Currently, mock time slots are generated in `src/pages/BookingPage.tsx`. Replace this with your own availability logic or API calls to your backend.
+
+### Email Notifications
+
+Add email notification functionality by:
+1. Setting up a backend service with email capabilities
+2. Updating the booking submission logic in `src/components/BookingForm.tsx`
+
+## Project Structure
+
+- `/src/components` - Reusable UI components
+- `/src/pages` - Main application pages
+- `/src/lib` - Utility functions and helpers
+
+Key components:
+- `Calendar.tsx` - Weekly calendar component
+- `TimeSlot.tsx` - Individual time slot selection
+- `BookingForm.tsx` - Client information form
+- `ShareableLink.tsx` - Booking link generator
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
