@@ -3,7 +3,8 @@
 
 A modern, responsive web application for scheduling and managing appointments. Perfect for professionals, service providers, and small businesses who need an easy way to let clients book time slots.
 
-![Appointment Booking App](public/og-image.png)
+![image](https://github.com/user-attachments/assets/a5649d38-4dac-473e-9f2b-49a1aeca4086)
+
 
 ## Features
 
